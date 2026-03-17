@@ -24,28 +24,26 @@ def scrape():
         html = page.content()
         browser.close()
 
-    # DEBUG: print HTML around key words so we can fix the regex
-    for keyword in ["Views", "Likes", "801", "views"]:
-        idx = html.find(keyword)
-        if idx > 0:
-            print(f"=== Found '{keyword}' at {idx} ===")
-            print(html[max(0,idx-80):idx+200])
-            print()
-            break
-    else:
-        print("None of the keywords found! Printing first 3000 chars:")
-        print(html[:3000])
-
-    def find(pattern):
-        m = re.search(pattern, html)
+    def find(label):
+        # Matches: LabelText</span><div...><span...>VALUE
+        pattern = rf'{label}</span>.*?<span[^>]*>([\d.,KM]+)</span>'
+        m = re.search(pattern, html, re.DOTALL)
         return m.group(1).strip() if m else ""
 
-    views    = find(r'Views</\w+>\s*([\d.,KM]+)')
-    likes    = find(r'Likes</\w+>\s*([\d.,KM]+)')
-    comments = find(r'Comments</\w+>\s*([\d.,KM]+)')
-    shares   = find(r'Shares</\w+>\s*([\d.,KM]+)')
-    payouts  = find(r'\$([\d.,]+)\s*</\w+>\s*Approved')
-    approved = find(r'(\d+)\s*of \d+ total')
+    views    = find("Views")
+    likes    = find("Likes")
+    comments = find("Comments")
+    shares   = find("Shares")
+
+    # Payouts: $589.45
+    payouts  = re.search(r'Payouts</span>.*?\$([\d.,]+)', html, re.DOTALL)
+    payouts  = payouts.group(1) if payouts else ""
+
+    # Approved: 82 of 310 total
+    approved = re.search(r'(\d+)</p>\s*<p[^>]*>of \d+', html, re.DOTALL)
+    if not approved:
+        approved = re.search(r'(\d+)\s*of \d+ total', html)
+    approved = approved.group(1) if approved else ""
 
     row = {
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
