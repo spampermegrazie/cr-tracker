@@ -25,7 +25,6 @@ def scrape():
         browser.close()
 
     def find(label):
-        # Matches: LabelText</span><div...><span...>VALUE
         pattern = rf'{label}</span>.*?<span[^>]*>([\d.,KM]+)</span>'
         m = re.search(pattern, html, re.DOTALL)
         return m.group(1).strip() if m else ""
@@ -35,24 +34,23 @@ def scrape():
     comments = find("Comments")
     shares   = find("Shares")
 
-    # Payouts: $589.45
-    payouts  = re.search(r'Payouts</span>.*?\$([\d.,]+)', html, re.DOTALL)
-    payouts  = payouts.group(1) if payouts else ""
+    payouts = re.search(r'Payouts</span>.*?\$([\d.,]+)', html, re.DOTALL)
+    payouts = payouts.group(1) if payouts else ""
 
-    # Approved: 82 of 310 total
-    approved = re.search(r'(\d+)</p>\s*<p[^>]*>of \d+', html, re.DOTALL)
-    if not approved:
-        approved = re.search(r'(\d+)\s*of \d+ total', html)
-    approved = approved.group(1) if approved else ""
+    # Grab both numbers: "82 of 313 total"
+    approved_match = re.search(r'(\d+)\s*(?:</[^>]+>\s*)*of\s*(\d+)\s*total', html)
+    approved       = approved_match.group(1) if approved_match else ""
+    approved_total = approved_match.group(2) if approved_match else ""
 
     row = {
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
-        "views":     parse_number(views)    if views    else "",
-        "likes":     parse_number(likes)    if likes    else "",
-        "comments":  parse_number(comments) if comments else "",
-        "shares":    parse_number(shares)   if shares   else "",
-        "payouts":   payouts,
-        "approved":  approved,
+        "timestamp":      datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
+        "views":          parse_number(views)    if views    else "",
+        "likes":          parse_number(likes)    if likes    else "",
+        "comments":       parse_number(comments) if comments else "",
+        "shares":         parse_number(shares)   if shares   else "",
+        "payouts":        payouts,
+        "approved":       approved,
+        "approved_total": approved_total,
     }
 
     print(f"Scraped: {row}")
