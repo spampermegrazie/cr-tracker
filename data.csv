@@ -1,6 +1,1 @@
-timestamp,views,likes,comments,shares,payouts,approved
-2026-03-17 18:22,,,,,,
-2026-03-17 18:30,,,,,,
-2026-03-17 18:34,,,,,,
-2026-03-17 18:38,802300,67600,367,1200,589.51,
-2026-03-17 18:45,802400,67600,367,1200,589.55,,
+timestamp,views,likes,comments,shares,payouts,approved,approved_total
