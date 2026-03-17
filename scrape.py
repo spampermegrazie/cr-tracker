@@ -24,14 +24,6 @@ def scrape():
         html = page.content()
         browser.close()
 
-    # DEBUG: print HTML around "Approved"
-    idx = html.find("Approved")
-    if idx > 0:
-        print("=== HTML around 'Approved' ===")
-        print(html[max(0,idx-100):idx+400])
-    else:
-        print("'Approved' not found in HTML!")
-
     def find(label):
         pattern = rf'{label}</span>.*?<span[^>]*>([\d.,KM]+)</span>'
         m = re.search(pattern, html, re.DOTALL)
@@ -45,7 +37,11 @@ def scrape():
     payouts = re.search(r'Payouts</span>.*?\$([\d.,]+)', html, re.DOTALL)
     payouts = payouts.group(1) if payouts else ""
 
-    approved_match = re.search(r'(\d+)\s*(?:</[^>]+>\s*)*of\s*(\d+)\s*total', html)
+    # Structure: Approved</span>...<span>82</span>...<span>of <!-- -->314<!-- --> total
+    approved_match = re.search(
+        r'Approved</span>.*?<span[^>]*>(\d+)</span>.*?of\s*(?:<!--.*?-->)?\s*(\d+)\s*(?:<!--.*?-->)?\s*total',
+        html, re.DOTALL
+    )
     approved       = approved_match.group(1) if approved_match else ""
     approved_total = approved_match.group(2) if approved_match else ""
 
